@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sheriyans</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div class="w-full bg-zinc-800">
+        <div class="parent relative top-0 left-0 w-full h-[700vh] bg-zinc-800">
+            <div class="w-full sticky top-0 left-0 h-screen">
+            <canvas id="frame" class="w-full h-full"></canvas>
+        </div>
+        </div>
+    </div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+    const canvas = document.getElementById("frame");
+    const context = canvas.getContext("2d");
+    const frames = {
+        current: 0,
+        max: 668,
+    };
+
+    const images = [];
+
+    let loadedImages = 0;
+
+    function loadImages() {
+        for (let i = 0; i <= frames.max; i++) {
+            const imageUrl = `./frames/frame_${i.toString().padStart(4, "0")}.jpeg`;
+
+            const img = new Image();
+            img.src = imageUrl;
+
+            img.onload = () => {
+                loadedImages++;
+                if (loadedImages === frames.max + 1) {
+                    initScrollAnimation();
+                }
+            };
+            img.onerror = () => {
+                console.error(`Failed to load image at ${imageUrl}`);
+            };
+            images.push(img);
+        }
+    }
+
+    function renderFrame(index) {
+        if (index >= 0 && index <= frames.max) {
+            const img = images[index];
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const scaleX = canvas.width / img.width;
+            const scaleY = canvas.height / img.height;
+            const scale = Math.max(scaleX, scaleY);
+
+            const newWidth = img.width * scale;
+            const newHeight = img.height * scale;
+            const offsetX = (canvas.width - newWidth) / 2;
+            const offsetY = (canvas.height - newHeight) / 2;
+
+            context.imageSmoothingQuality = "high";
+            context.imageSmoothingEnabled = true;
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.drawImage(img, offsetX, offsetY, newWidth, newHeight);
+            frames.current = index;
+        }
+    }
+
+    function initScrollAnimation() {
+        gsap.to(frames, {
+            current: frames.max,
+            ease: "none",
+            scrollTrigger: {
+                trigger: ".parent",
+                start: "top top",
+                end: "bottom bottom",
+                scrub: true,
+            },
+            onUpdate: () => renderFrame(Math.floor(frames.current)),
+        });
+    }
+
+    loadImages();
+</script>
+</html>
